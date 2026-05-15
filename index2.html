@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Texto Nítido y Suave</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let particulas = [];
+
+    // --- CONFIGURACIÓN PARA QUE SE VEA RECTO Y LENTO ---
+    const texto = "MIA TE AMO"; 
+    const densidad = 3;          // Menor número = más definición (recto)
+    const color = "#ff2d55";
+    const velocidad = 0.02;      // 0.02 es muy lento y suave
+    // --------------------------------------------------
+
+    function inicializar() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        particulas = [];
+
+        // Dibujamos el texto base
+        ctx.fillStyle = "white";
+        ctx.font = "bold 120px sans-serif"; // Tamaño ajustado para que quepa bien
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(texto, canvas.width / 2, canvas.height / 2);
+
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let y = 0; y < canvas.height; y += densidad) {
+            for (let x = 0; x < canvas.width; x += densidad) {
+                const index = (y * canvas.width + x) * 4;
+                if (imgData[index + 3] > 128) { 
+                    particulas.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        destX: x,
+                        destY: y,
+                        size: 1.5 // Círculos pequeños para bordes rectos
+                    });
+                }
+            }
+        }
+    }
+
+    function dibujarParticula(x, y, size) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2); // Círculos para máxima nitidez
+        ctx.fill();
+    }
+
+    function animar() {
+        // Fondo con rastro suave
+        ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < particulas.length; i++) {
+            let p = particulas[i];
+            // Movimiento suave (Interpolación lineal)
+            p.x += (p.destX - p.x) * velocidad;
+            p.y += (p.destY - p.y) * velocidad;
+            dibujarParticula(p.x, p.y, p.size);
+        }
+
+        requestAnimationFrame(animar);
+    }
+
+    window.onload = () => {
+        inicializar();
+        animar();
+    };
+
+    window.onresize = inicializar;
+</script>
+</body>
+</html>
